@@ -8,14 +8,20 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Spatial",
+"class": "Starship",
+"language": "GDScript",
+"path": "res://Starship.gd"
+} ]
 _global_script_class_icons={
-
+"Starship": ""
 }
 
 [application]
 
 config/name="AIRLander"
+run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
 [rendering]

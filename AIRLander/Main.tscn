@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Main.gd" type="Script" id=1]
+[ext_resource path="res://Starship.tscn" type="PackedScene" id=2]
+
+[node name="Main" type="Node"]
+script = ExtResource( 1 )
+
+[node name="Starship" parent="." instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.24753, -0.445618, -5.80569 )
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.951545, 0.30751, 0, -0.30751, 0.951545, 123.357, 157.789, 164.539 )
+far = 8192.0
