@@ -23,8 +23,16 @@ var d_rcs
 var fuerzas
 var ri
 var Dt
+var g
+
+
 onready var ss = preload("res://Starship.tscn").instance()
+onready var perceptron = load("res://Neuron.gd")
+onready var NN = load("res://NNController.gd")
+var perceptron1
 var ssrot
+var sslin
+var NN1
 
 
 
@@ -49,12 +57,13 @@ func _init(r,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	
 	
 	
+	
 	#Modelo Cilíndrico, CG en el centro Geométrico (0,0) en coord locales
 	diametro = 9.0 #diámetro
 	radio = diametro/2.0 #radio
 	h = 50 #Longitud del cohete
 	
-	m = 120000
+	m = 100000
 	
 	#Tensor de inercia de un cilindro (Cambiar cuando cambie el modelo a uno más realista)
 	Itensor = Basis()
@@ -64,12 +73,13 @@ func _init(r,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	print(Itensor)
 	I2D = Itensor.x.x #El valor que vamos a usar en el problema 2D, es la única dirección en la que lo giraremos
 #	print(I2D)
-	beta = 0 #Ángulo de la tobera del motor respecto al eje longitudinal
+	beta = 0.7 #Ángulo de la tobera del motor respecto al eje longitudinal
 	Ftmax = 1200000  #Máximo empuje del motor cohete
+	g = 10
 	
 	#RCS -- en el extremo superior, apuntando a -x y +x
-	Frcs = [Vector2(-0.01,0),Vector2(0.01,0)] #Vectores de empuje del control de actitud (RCS)
-	RCS = [1,0] #indica qué RCS están activos (1) e inactivos (0)
+	Frcs = [Vector2(-15000,0),Vector2(15000,0)] #Vectores de empuje del control de actitud (RCS)
+	RCS = [0,1] #indica qué RCS están activos (1) e inactivos (0)
 	d_rcs = h/2 #distancia de los rcs respecto al CG (h/2---- extremo superior del cohete)
 	
 	
@@ -77,9 +87,23 @@ func _init(r,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	ri = [] #Brazos de las fuerzas respecto al CM (para calcular los momentos)
 	Dt = 0.1 #Paso de tiempo en segundos
 	
+
+
 	var Sfuerzas = Vector2(0.0,0.0)
 	
 	
+	
+func _ready():
+	add_child(ss)
+	ssrot = get_node("Starship/Starship-rotation")
+	sslin = get_node("Starship/Starship-rotation/Starship-linear")
+	sslin.set_translation(Vector3(r.x,r.y,0))
+	var perceptron1 = perceptron.new([-0.5,-0.5],0)
+	print("perceptron")
+	print(perceptron1.compute([0.5,1]))
+	NN1 = NN.new()
+	NN1.configure()
+	#ssrot.rotation.z  = deg2rad(theta)
 
 func update():
 	#TODO: aplicar fuerzas, cambiar acc, 
@@ -95,8 +119,11 @@ func update():
 	
 	#Newton
 	var Sfuerzas = Vector2(0.0,0.0)
+	#print(fuerzas)
 	for f in fuerzas:
 		Sfuerzas += f
+		
+	#print(Sfuerzas)
 	
 	#print(Sfuerzas)
 	gamma = (1/m)*Sfuerzas
@@ -104,11 +131,13 @@ func update():
 	
 	#Momentos
 	alpha = 0
+	#print(ri)
 	for i in range(len(fuerzas)):
 #		print(ri[i],fuerzas[i])
 		alpha += ri[i].cross(fuerzas[i]) #
 #		print("Cross")
 #		print(ri[i].cross(fuerzas[i]))
+	alpha /= I2D
 	#velocidad
 	v += gamma*Dt
 	#posicion
@@ -118,17 +147,20 @@ func update():
 	w += alpha *Dt
 	#angulo theta
 	theta += w*Dt
-	alpha *= (1/I2D)
+	#print(theta)
+	
 	applyUpdate()
 
 	
 	
 	
 func applyThrust(beta):
-    var f = Vector2(-Ftmax*sin(beta), Ftmax*cos(beta))
-    fuerzas.append(f)
-    var brazo = Vector2(sin(beta)*cos(beta)*h/2.0, sin(beta)*sin(beta)*h/2.0)
-    ri.append(brazo)
+	var betarad = deg2rad(beta)
+	var f = Vector2(-Ftmax*sin(betarad), Ftmax*cos(betarad))
+	fuerzas.append(f)
+	#print(f)
+	var brazo = Vector2(sin(betarad)*cos(betarad)*h/2.0, -sin(betarad)*sin(betarad)*h/2.0)
+	ri.append(brazo)
 
 func applyRCS():
 	for i in range(len(RCS)):
@@ -137,18 +169,24 @@ func applyRCS():
 			ri.append(Vector2(0,d_rcs))
     
 func applyG():
-	
-	fuerzas.append(m*Vector2(0,-10))
+	var fg = m*g*Vector2(sin(deg2rad(theta)),-cos(deg2rad(theta)))
+	fuerzas.append(fg)
+	#print(fg)
 	ri.append(Vector2(0.0,0.0))
 
 
 func applyUpdate():
 	#print('rot',ssrotational)
-	ss.set_translation(Vector3(r.x,r.y,0))
-	ssrot.rotate(Vector3(0,0,1),deg2rad(w))
+	sslin.set_translation(Vector3(r.x,r.y,0))
+	#ssrot.rotate(Vector3(0,0,1),deg2rad(w))
+	ssrot.rotation.z  = deg2rad(theta)
 	
 
 func crear():
 	add_child(ss)
 	ssrot = get_node("Starship/Starship-rotation")
-	ss.set_translation(Vector3(r.x,r.y,0))
+	sslin = get_node("Starship/Starship-rotation/Starship-linear")
+	sslin.set_translation(Vector3(r.x,r.y,0))
+	#ssrot.rotation.z  = deg2rad(theta)
+	
+
