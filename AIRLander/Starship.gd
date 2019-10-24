@@ -38,7 +38,7 @@ var NN1
 
 
 
-func _init(r,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
+func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	
 	#ss = ss_scene.instance()
 	
@@ -103,11 +103,15 @@ func _ready():
 	print(perceptron1.compute([0.5,1]))
 	NN1 = NN.new()
 	NN1.configure()
+	procesarNN()
+	r = Vector2(0.0,300.0)
+	v = Vector2(0.0,-50.0) 
 	#ssrot.rotation.z  = deg2rad(theta)
 
 func update():
 	#TODO: aplicar fuerzas, cambiar acc, 
-	
+	procesarNN()
+
 	#clear f
 	fuerzas = []
 	ri = []
@@ -190,3 +194,23 @@ func crear():
 	#ssrot.rotation.z  = deg2rad(theta)
 	
 
+func procesarNN():
+	var inputNN = []
+	var output = []
+	#print(r)
+	for i in range(2):
+		inputNN.append(r[i]/1000.0)
+	for i in range(2):
+		inputNN.append(v[i]/100.0)
+	for i in range(2):
+		inputNN.append(gamma[i]/10.0)
+	
+	inputNN.append(theta/360.0)
+	inputNN.append(w/10.0)
+	inputNN.append(alpha/10.0)
+
+	#print(inputNN)
+	output = NN1.feedForward(inputNN)
+	RCS = [output[0], output[1]]
+	Ftmax = output[2]
+	beta = output[3]

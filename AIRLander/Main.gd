@@ -7,8 +7,8 @@ onready var s = load("res://Starship.gd")
 
 onready var Starship_scene = preload("res://Starship.tscn")
 
-var pos = Vector2(10.0,10.0)
-var vel = Vector2(0.0,0.0)
+var pos = Vector2(200.0,10.0)
+var vel = Vector2(0.0,200.0)
 var gamma = Vector2(0.0,0.0)
 var theta = 90
 var s1
