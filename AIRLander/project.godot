@@ -14,6 +14,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://NNController.gd"
 }, {
+"base": "Reference",
+"class": "NeuralNetwork",
+"language": "GDScript",
+"path": "res://NeuralNetwork.gd"
+}, {
 "base": "Spatial",
 "class": "Starship",
 "language": "GDScript",
@@ -21,6 +26,7 @@ _global_script_classes=[ {
 } ]
 _global_script_class_icons={
 "NNController": "",
+"NeuralNetwork": "",
 "Starship": ""
 }
 

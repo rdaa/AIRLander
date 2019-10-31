@@ -2,7 +2,7 @@ extends Spatial
 
 class_name Starship
 
-
+var Q = []
 var r :Vector2
 var v :Vector2
 var gamma :Vector2
@@ -28,33 +28,35 @@ var g
 
 onready var ss = preload("res://Starship.tscn").instance()
 onready var perceptron = load("res://Neuron.gd")
-onready var NN = load("res://NNController.gd")
+onready var NN = load("res://NeuralNetwork.gd")
+onready var mat = load("res://Matrix.gd").new()
 var perceptron1
 var ssrot
 var sslin
 var NN1
+var genes = []
+var fg
+var mesh
 
 
 
-
-
-func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
+func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 	
 	#ss = ss_scene.instance()
 	
 	
-	r = r
-	v = v
+	r = r_in
+	v = v_in
 	# rglobal
 	# vglobal
 	# gammaglobal
 	# vlocal
 	# gammalocal
-	gamma = gamma #aceleracion
-	alpha = alpha #acc angular
+	gamma = gamma_in #aceleracion
+	alpha = alpha_in #acc angular
 	w = w #vel angular
-	theta = theta #ángulo
-	
+	theta = theta_in #ángulo
+	#print(r)
 	
 	
 	
@@ -70,15 +72,15 @@ func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	Itensor.x = (m/12.0)*Vector3(3*pow(radio,2) + h, 0, 0)
 	Itensor.y = (m/12.0)*Vector3(0,3*pow(radio,2) + h, 0)
 	Itensor.z = (m/12.0)*Vector3(0, 0, 6*pow(radio,2))
-	print(Itensor)
+	#print(Itensor)
 	I2D = Itensor.x.x #El valor que vamos a usar en el problema 2D, es la única dirección en la que lo giraremos
 #	print(I2D)
 	beta = 0.7 #Ángulo de la tobera del motor respecto al eje longitudinal
-	Ftmax = 1200000  #Máximo empuje del motor cohete
-	g = 10
+	Ftmax = 0  #Máximo empuje del motor cohete
+	g = 0
 	
 	#RCS -- en el extremo superior, apuntando a -x y +x
-	Frcs = [Vector2(-15000,0),Vector2(15000,0)] #Vectores de empuje del control de actitud (RCS)
+	Frcs = [Vector2(-1000,0),Vector2(1000,0)] #Vectores de empuje del control de actitud (RCS)
 	RCS = [0,1] #indica qué RCS están activos (1) e inactivos (0)
 	d_rcs = h/2 #distancia de los rcs respecto al CG (h/2---- extremo superior del cohete)
 	
@@ -94,18 +96,24 @@ func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	
 	
 func _ready():
+	
 	add_child(ss)
 	ssrot = get_node("Starship/Starship-rotation")
 	sslin = get_node("Starship/Starship-rotation/Starship-linear")
+	mesh = get_node("Starship/Starship-rotation/Starship-linear/MeshInstance")
 	sslin.set_translation(Vector3(r.x,r.y,0))
 	var perceptron1 = perceptron.new([-0.5,-0.5],0)
-	print("perceptron")
-	print(perceptron1.compute([0.5,1]))
+	#print("perceptron")
+	#print(perceptron1.compute([0.5,1]))
+	
+	for i in range(434):
+		genes.append(rand_range(-1,1))
 	NN1 = NN.new()
-	NN1.configure()
+	NN1.configureG(genes)
 	procesarNN()
-	r = Vector2(0.0,300.0)
-	v = Vector2(0.0,-50.0) 
+
+	# r = Vector2(0.0,300.0)
+	# v = Vector2(0.0,-50.0) 
 	#ssrot.rotation.z  = deg2rad(theta)
 
 func update():
@@ -118,6 +126,7 @@ func update():
 	applyThrust(beta)
 	applyRCS()
 	applyG()
+	
 	#print('ri:', ri)
 	
 	
@@ -142,21 +151,37 @@ func update():
 #		print("Cross")
 #		print(ri[i].cross(fuerzas[i]))
 	alpha /= I2D
+
+	Q = computeQ()
 	#velocidad
 	v += gamma*Dt
 	#posicion
-	r += v *Dt
-	
+	var dr
+	var dr_vector :Vector2
+	dr = mat.multiply_mv(Q,v)
+	for i in range(len(dr)):
+		dr_vector[i] = dr[i]
+	dr_vector *= Dt
+	r += dr_vector
+	#r += v*Dt
 	#vel. angular
 	w += alpha *Dt
 	#angulo theta
 	theta += w*Dt
 	#print(theta)
+
+
 	
 	applyUpdate()
 
 	
 	
+func computeQ():
+	var matriz
+	matriz = []
+	matriz.append([cos(deg2rad(theta)), -sin(deg2rad(theta))])
+	matriz.append([sin(deg2rad(theta)), cos(deg2rad(theta))])
+	return matriz
 	
 func applyThrust(beta):
 	var betarad = deg2rad(beta)
@@ -173,18 +198,24 @@ func applyRCS():
 			ri.append(Vector2(0,d_rcs))
     
 func applyG():
-	var fg = m*g*Vector2(sin(deg2rad(theta)),-cos(deg2rad(theta)))
+	fg = m*g*Vector2(-sin(deg2rad(theta)),-cos(deg2rad(theta)))
 	fuerzas.append(fg)
 	#print(fg)
 	ri.append(Vector2(0.0,0.0))
+
+
+func applyFriccion():
+	var friccion = -0.2*v
+	
 
 
 func applyUpdate():
 	#print('rot',ssrotational)
 	sslin.set_translation(Vector3(r.x,r.y,0))
 	#ssrot.rotate(Vector3(0,0,1),deg2rad(w))
-	ssrot.rotation.z  = deg2rad(theta)
-	
+	#ssrot.rotation.z  = deg2rad(theta)
+	mesh.rotation.z  = deg2rad(theta)
+
 
 func crear():
 	add_child(ss)

@@ -95,9 +95,9 @@ func feedForward(entrada):
         output[1] = 1
     #print(output)
     output[2] = tanh(auxV[2])
-    print(output[2])
+    #print(output[2])
     output[2] = range_lerp(output[2],-1.0,1.0,0.0,4000000.0)
-    print(output[2])
+    #print(output[2])
     output[3] = tanh(auxV[3])
     #print(output[3])
     output[3] = range_lerp(output[3],-1,1,-2,2)
