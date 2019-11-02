@@ -24,7 +24,7 @@ var fuerzas
 var ri
 var Dt
 var g
-
+var Q
 
 onready var ss = preload("res://Starship.tscn").instance()
 onready var perceptron = load("res://Neuron.gd")
@@ -74,12 +74,12 @@ func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	I2D = Itensor.x.x #El valor que vamos a usar en el problema 2D, es la única dirección en la que lo giraremos
 #	print(I2D)
 	beta = 0.7 #Ángulo de la tobera del motor respecto al eje longitudinal
-	Ftmax = 1200000  #Máximo empuje del motor cohete
+	Ftmax = 1000000  #Máximo empuje del motor cohete
 	g = 10
 	
 	#RCS -- en el extremo superior, apuntando a -x y +x
 	Frcs = [Vector2(-15000,0),Vector2(15000,0)] #Vectores de empuje del control de actitud (RCS)
-	RCS = [0,1] #indica qué RCS están activos (1) e inactivos (0)
+	RCS = [0,0] #indica qué RCS están activos (1) e inactivos (0)
 	d_rcs = h/2 #distancia de los rcs respecto al CG (h/2---- extremo superior del cohete)
 	
 	
@@ -87,6 +87,7 @@ func _init(r ,v,gamma,alpha = 0.0, w = 0.0, theta = 0.0):
 	ri = [] #Brazos de las fuerzas respecto al CM (para calcular los momentos)
 	Dt = 0.1 #Paso de tiempo en segundos
 	
+	Q = []
 
 
 	var Sfuerzas = Vector2(0.0,0.0)
@@ -101,17 +102,21 @@ func _ready():
 	var perceptron1 = perceptron.new([-0.5,-0.5],0)
 	print("perceptron")
 	print(perceptron1.compute([0.5,1]))
-	NN1 = NN.new()
-	NN1.configure()
-	procesarNN()
+	#NN1 = NN.new()
+	#NN1.configure()
+	#procesarNN()
 	r = Vector2(0.0,300.0)
-	v = Vector2(0.0,-50.0) 
+	v = Vector2(0.0,0.0) 
 	#ssrot.rotation.z  = deg2rad(theta)
 
 func update():
 	#TODO: aplicar fuerzas, cambiar acc, 
-	procesarNN()
-
+	#procesarNN()
+	beta = 0
+	if Input.is_action_pressed("ui_right"):
+		beta = -1.0
+	if Input.is_action_pressed("ui_left"):
+		beta = 1.0
 	#clear f
 	fuerzas = []
 	ri = []
@@ -141,6 +146,8 @@ func update():
 		alpha += ri[i].cross(fuerzas[i]) #
 #		print("Cross")
 #		print(ri[i].cross(fuerzas[i]))
+
+
 	alpha /= I2D
 	#velocidad
 	v += gamma*Dt
@@ -157,7 +164,12 @@ func update():
 
 	
 	
-	
+func calcularQ():
+	var matriz = []
+	matriz.append([cos(deg2rad(theta)), -sin(deg2rad(theta))])
+	matriz.append([sin(deg2rad(theta)), cos(deg2rad(theta))])
+	return matriz
+
 func applyThrust(beta):
 	var betarad = deg2rad(beta)
 	var f = Vector2(-Ftmax*sin(betarad), Ftmax*cos(betarad))
