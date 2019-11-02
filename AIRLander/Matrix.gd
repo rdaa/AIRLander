@@ -18,15 +18,26 @@ func multiply(a, b):
     return matrix
 
 func multiply_mv(a,b):
-    var vector = []
+    var vector
     var res
-    #print("Msize:",a[0].size())
-    #print("Vsize",b.size())
-    for i in range(a.size()):
-        res = 0
-        for j in range(a[i].size()):
-            res += a[i][j] * b[j]
-        vector.append(res)
+
+    if typeof(b) == TYPE_VECTOR2:
+        vector = Vector2(0,0)
+        for i in range(a.size()):
+            res = 0
+            for j in range(a[i].size()):
+                res += a[i][j] * b[j]
+            vector[i] = res
+    
+    else:
+        vector = []
+        #print("Msize:",a[0].size())
+        #print("Vsize",b.size())
+        for i in range(a.size()):
+            res = 0
+            for j in range(a[i].size()):
+                res += a[i][j] * b[j]
+            vector.append(res)
     return vector
 
 func map(valor:float, istart:float, istop:float, ostart:float, ostop:float):

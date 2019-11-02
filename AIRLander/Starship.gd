@@ -6,6 +6,9 @@ var Q = []
 var r :Vector2
 var v :Vector2
 var gamma :Vector2
+var acGlobal :Vector2
+var vGlobal :Vector2
+
 var alpha :float
 var w :float
 var theta :float
@@ -47,6 +50,8 @@ func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 	
 	r = r_in
 	v = v_in
+	vGlobal = v_in
+	acGlobal = gamma_in
 	# rglobal
 	# vglobal
 	# gammaglobal
@@ -76,8 +81,8 @@ func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 	I2D = Itensor.x.x #El valor que vamos a usar en el problema 2D, es la única dirección en la que lo giraremos
 #	print(I2D)
 	beta = 0.7 #Ángulo de la tobera del motor respecto al eje longitudinal
-	Ftmax = 0  #Máximo empuje del motor cohete
-	g = 0
+	Ftmax = 100000  #Máximo empuje del motor cohete
+	g = 10
 	
 	#RCS -- en el extremo superior, apuntando a -x y +x
 	Frcs = [Vector2(-1000,0),Vector2(1000,0)] #Vectores de empuje del control de actitud (RCS)
@@ -87,7 +92,7 @@ func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 	
 	fuerzas = [] #Aquí entrarán las fuerzas en cada momento para iterar en ellas
 	ri = [] #Brazos de las fuerzas respecto al CM (para calcular los momentos)
-	Dt = 0.1 #Paso de tiempo en segundos
+	Dt = 0.05 #Paso de tiempo en segundos
 	
 
 
@@ -98,8 +103,8 @@ func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 func _ready():
 	
 	add_child(ss)
-	ssrot = get_node("Starship/Starship-rotation")
-	sslin = get_node("Starship/Starship-rotation/Starship-linear")
+	sslin = get_node("Starship/Starship-rotation")
+	ssrot = get_node("Starship/Starship-rotation/Starship-linear")
 	mesh = get_node("Starship/Starship-rotation/Starship-linear/MeshInstance")
 	sslin.set_translation(Vector3(r.x,r.y,0))
 	var perceptron1 = perceptron.new([-0.5,-0.5],0)
@@ -126,10 +131,11 @@ func update():
 	applyThrust(beta)
 	applyRCS()
 	applyG()
+	applyFriccion()
 	
 	#print('ri:', ri)
 	
-	
+	#print(Ftmax)
 	#Newton
 	var Sfuerzas = Vector2(0.0,0.0)
 	#print(fuerzas)
@@ -141,7 +147,13 @@ func update():
 	#print(Sfuerzas)
 	gamma = (1/m)*Sfuerzas
 	#print("gamma",gamma)
-	
+	Q = calcularQ()
+	#print("Q",Q)
+	acGlobal = mat.multiply_mv(Q,gamma)
+	vGlobal += acGlobal*Dt
+	r += vGlobal*Dt
+
+
 	#Momentos
 	alpha = 0
 	#print(ri)
@@ -152,17 +164,11 @@ func update():
 #		print(ri[i].cross(fuerzas[i]))
 	alpha /= I2D
 
-	Q = computeQ()
+	
 	#velocidad
 	v += gamma*Dt
 	#posicion
-	var dr
-	var dr_vector :Vector2
-	dr = mat.multiply_mv(Q,v)
-	for i in range(len(dr)):
-		dr_vector[i] = dr[i]
-	dr_vector *= Dt
-	r += dr_vector
+	
 	#r += v*Dt
 	#vel. angular
 	w += alpha *Dt
@@ -176,7 +182,7 @@ func update():
 
 	
 	
-func computeQ():
+func calcularQ():
 	var matriz
 	matriz = []
 	matriz.append([cos(deg2rad(theta)), -sin(deg2rad(theta))])
@@ -205,7 +211,9 @@ func applyG():
 
 
 func applyFriccion():
-	var friccion = -0.2*v
+	var friccion = -20000*vGlobal
+	fuerzas.append(friccion)
+	ri.append(Vector2(0.0,0.0))
 	
 
 
@@ -228,20 +236,25 @@ func crear():
 func procesarNN():
 	var inputNN = []
 	var output = []
+	var normalizedInput
 	#print(r)
 	for i in range(2):
-		inputNN.append(r[i]/1000.0)
+		normalizedInput = (r[i]/1000.0)
+		inputNN.append(normalizedInput)
 	for i in range(2):
-		inputNN.append(v[i]/100.0)
+		normalizedInput = (v[i]/200.0)-0.5
+		inputNN.append(normalizedInput)
 	for i in range(2):
-		inputNN.append(gamma[i]/10.0)
+		normalizedInput = (gamma[i]/10.0)-0.5
+		inputNN.append(normalizedInput)
 	
-	inputNN.append(theta/360.0)
-	inputNN.append(w/10.0)
-	inputNN.append(alpha/10.0)
+	inputNN.append((theta/45.0)-0.5)
+	inputNN.append((w/5.0)-0.5)
+	inputNN.append((alpha/2.0)-0.5)
 
-	#print(inputNN)
+	print("input",inputNN)
 	output = NN1.feedForward(inputNN)
 	RCS = [output[0], output[1]]
 	Ftmax = output[2]
 	beta = output[3]
+	

@@ -4,17 +4,13 @@ extends Node
 # var a = 2
 # var b = "text"
 onready var s = load("res://Starship.gd")
-
-onready var Starship_scene = preload("res://Starship.tscn")
-
-var pos = Vector2(0.0,500.0)
-var vel = Vector2(0.0,0.0)
-var gamma = Vector2(0.0,0.0)
-var theta = 90
+var pos = Vector2(0.0, 1200)
+var vel = Vector2(0.0,-250)
+var acc = Vector2(0.0,0.0)
 var s1
 var ss
 #GA
-var popSize = 1
+var popSize = 100
 var pop = []
 var genes = []
 
@@ -25,15 +21,16 @@ var genes = []
 func _ready():
 	
 	
-	s1 = s.new(pos,vel,gamma)
-	s1.name = "hola"
-	add_child(s1)
+	#s1 = s.new(pos,vel,gamma)
+	#s1.name = "hola"
+	#add_child(s1)
 	#s1.crear()
 	#s1.update()
 	#ss = Starship_scene.instance()
 	#add_child(ss)
+	randomize()
 	for i in range(popSize):
-		ss = s.new(pos,vel,gamma)
+		ss = s.new(pos,vel,acc)
 		ss.name = "Starship"+str(i)
 		pop.append(ss)
 		add_child(ss)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=3 format=2]
 
 [sub_resource type="CylinderMesh" id=1]
 top_radius = 4.5
@@ -6,14 +6,8 @@ bottom_radius = 4.5
 height = 50.0
 
 [sub_resource type="SpatialMaterial" id=2]
-albedo_color = Color( 0.592157, 0.592157, 0.568627, 1 )
+albedo_color = Color( 0.666667, 0.627451, 0.627451, 1 )
 metallic = 0.34
-
-[sub_resource type="CylinderMesh" id=3]
-height = 50.0
-
-[sub_resource type="SpatialMaterial" id=4]
-albedo_color = Color( 0.796078, 0.8, 0.203922, 1 )
 
 [node name="Starship" type="Spatial"]
 
@@ -24,8 +18,3 @@ albedo_color = Color( 0.796078, 0.8, 0.203922, 1 )
 [node name="MeshInstance" type="MeshInstance" parent="Starship-rotation/Starship-linear"]
 mesh = SubResource( 1 )
 material/0 = SubResource( 2 )
-
-[node name="MeshInstance" type="MeshInstance" parent="Starship-rotation/Starship-linear/MeshInstance"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -24.6245, 0 )
-mesh = SubResource( 3 )
-material/0 = SubResource( 4 )
