@@ -1,8 +1,10 @@
+extends Reference
+class_name GA
 
 
-
-
-
+var fitlist = []
+var poblacion = []
+var popSize  :int
 
 #Metodos de reproduccion
 #binary methods
@@ -48,11 +50,13 @@ func calcularFit(starship):
     var velocidad2
     var vAngular
     var verticalidad
-
+    var tiempo
+    
     distancia = starship.r.length()
     velocidad2 = starship.v.length_squared()
-    verticalidad = starship.theta
-    vAngular = starship.w
-    fit = distancia/10.0 + velocidad2 + pow((verticalidad/5),2) + vAngular
+    print(velocidad2)
+    verticalidad = abs(starship.theta)
+    vAngular = abs(starship.w)
+    fit = distancia/10.0 + velocidad2 + pow((verticalidad/5),2) + vAngular + tiempo/10
     return fit
 
