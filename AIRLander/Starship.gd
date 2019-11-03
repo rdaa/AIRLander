@@ -43,6 +43,8 @@ var mesh
 
 
 var finished = false
+var indice = 0
+var tiempoTotal = 0
 
 
 
@@ -129,6 +131,7 @@ func update():
 	if r.y - (h/2.0)*cos(deg2rad(theta)) <= 0:
 		finished = true
 	if not finished:
+		tiempoTotal += Dt
 		#TODO: aplicar fuerzas, cambiar acc, 
 		procesarNN()
 

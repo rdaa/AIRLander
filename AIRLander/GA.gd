@@ -5,6 +5,15 @@ class_name GA
 var fitlist = []
 var poblacion = []
 var popSize  :int
+var nextG
+
+func _init(popS,nGenes):
+    popSize = popS
+    for i in range(popSize):
+        poblacion.append([])
+        for j in range(nGenes):
+            poblacion[i].append(rand_range(-1,1))
+
 
 #Metodos de reproduccion
 #binary methods
@@ -57,6 +66,7 @@ func calcularFit(starship):
     print(velocidad2)
     verticalidad = abs(starship.theta)
     vAngular = abs(starship.w)
-    fit = distancia/10.0 + velocidad2 + pow((verticalidad/5),2) + vAngular + tiempo/10
+    tiempo = starship.tiempoTotal
+    fit = distancia/10.0 + velocidad2 + pow((verticalidad/5),2) + vAngular + tiempo/10.0
     return fit
 

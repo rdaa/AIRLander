@@ -4,7 +4,8 @@ extends Node
 # var a = 2
 # var b = "text"
 onready var s = load("res://Starship.gd")
-onready var ga = load("res://GA.gd")
+onready var ga = load("res://GA.gd").new(100,434)
+
 var pos = Vector2(0.0, 1200)
 var vel = Vector2(0.0,-250)
 var acc = Vector2(0.0,0.0)
@@ -14,14 +15,17 @@ var ss
 var popSize = 100
 var pop = []
 var genes = []
+var tiempo = 0
+var Dt = 0.05
 
+var checkfit = false
 #var s2 = s.new(Vector2(50.0,30.0),vel,gamma)
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	
+	print(ga.poblacion)
 	#s1 = s.new(pos,vel,gamma)
 	#s1.name = "hola"
 	#add_child(s1)
@@ -34,12 +38,24 @@ func _ready():
 		ss = s.new(pos,vel,acc)
 		ss.name = "Starship"+str(i)
 		pop.append(ss)
-		add_child(ss)
+		add_child(ss)	
+		ss.indice = i
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	for starship in pop:
-		starship.update()
+	if tiempo < 5:
+		for starship in pop:
+			starship.update()
+		tiempo += Dt
+	elif checkfit == false:
+		
+		for starship in pop:
+			starship.finished = true
+			print(ga.calcularFit(starship))
+		checkfit = true
+		
+
+		
 	#print(nuevas.r,nuevas.theta)
 
 
