@@ -4,6 +4,7 @@ extends Node
 # var a = 2
 # var b = "text"
 onready var s = load("res://Starship.gd")
+onready var ga = load("res://GA.gd")
 var pos = Vector2(0.0, 1200)
 var vel = Vector2(0.0,-250)
 var acc = Vector2(0.0,0.0)
@@ -40,3 +41,8 @@ func _process(delta):
 	for starship in pop:
 		starship.update()
 	#print(nuevas.r,nuevas.theta)
+
+
+func _contactoSuelo(body):
+	ga.calcularFit()
+	

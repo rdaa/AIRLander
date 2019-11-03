@@ -42,6 +42,9 @@ var fg
 var mesh
 
 
+var finished = false
+
+
 
 func _init(r_in ,v_in,gamma_in,alpha_in = 0.0, w_in = 0.0, theta_in = 0.0):
 	
@@ -122,63 +125,67 @@ func _ready():
 	#ssrot.rotation.z  = deg2rad(theta)
 
 func update():
-	#TODO: aplicar fuerzas, cambiar acc, 
-	procesarNN()
+	#comprobar contacto con el suelo
+	if r.y - (h/2.0)*cos(deg2rad(theta)) <= 0:
+		finished = true
+	if not finished:
+		#TODO: aplicar fuerzas, cambiar acc, 
+		procesarNN()
 
-	#clear f
-	fuerzas = []
-	ri = []
-	applyThrust(beta)
-	applyRCS()
-	applyG()
-	applyFriccion()
-	
-	#print('ri:', ri)
-	
-	#print(Ftmax)
-	#Newton
-	var Sfuerzas = Vector2(0.0,0.0)
-	#print(fuerzas)
-	for f in fuerzas:
-		Sfuerzas += f
+		#clear f
+		fuerzas = []
+		ri = []
+		applyThrust(beta)
+		applyRCS()
+		applyG()
+		applyFriccion()
 		
-	#print(Sfuerzas)
-	
-	#print(Sfuerzas)
-	gamma = (1/m)*Sfuerzas
-	#print("gamma",gamma)
-	Q = calcularQ()
-	#print("Q",Q)
-	acGlobal = mat.multiply_mv(Q,gamma)
-	vGlobal += acGlobal*Dt
-	r += vGlobal*Dt
+		#print('ri:', ri)
+		
+		#print(Ftmax)
+		#Newton
+		var Sfuerzas = Vector2(0.0,0.0)
+		#print(fuerzas)
+		for f in fuerzas:
+			Sfuerzas += f
+			
+		#print(Sfuerzas)
+		
+		#print(Sfuerzas)
+		gamma = (1/m)*Sfuerzas
+		#print("gamma",gamma)
+		Q = calcularQ()
+		#print("Q",Q)
+		acGlobal = mat.multiply_mv(Q,gamma)
+		vGlobal += acGlobal*Dt
+		r += vGlobal*Dt
 
 
-	#Momentos
-	alpha = 0
-	#print(ri)
-	for i in range(len(fuerzas)):
-#		print(ri[i],fuerzas[i])
-		alpha += ri[i].cross(fuerzas[i]) #
-#		print("Cross")
-#		print(ri[i].cross(fuerzas[i]))
-	alpha /= I2D
+		#Momentos
+		alpha = 0
+		#print(ri)
+		for i in range(len(fuerzas)):
+	#		print(ri[i],fuerzas[i])
+			alpha += ri[i].cross(fuerzas[i]) #
+	#		print("Cross")
+	#		print(ri[i].cross(fuerzas[i]))
+		alpha /= I2D
 
-	
-	#velocidad
-	v += gamma*Dt
-	#posicion
-	
-	#r += v*Dt
-	#vel. angular
-	w += alpha *Dt
-	#angulo theta
-	theta += w*Dt
-	#print(theta)
+		
+		#velocidad
+		v += gamma*Dt
+		#posicion
+		
+		#r += v*Dt
+		#vel. angular
+		w += alpha *Dt
+		#angulo theta
+		theta += w*Dt
+		#print(theta)
 
 
-	
-	applyUpdate()
+		
+		applyUpdate()
 
 	
 	
@@ -211,9 +218,12 @@ func applyG():
 
 
 func applyFriccion():
-	var friccion = -20000*vGlobal
+	var friccion = -20000*v
 	fuerzas.append(friccion)
 	ri.append(Vector2(0.0,0.0))
+	var friccionrot = Vector2(10000*w,0)
+	fuerzas.append(friccionrot)
+	ri.append(Vector2(0,h/2))
 	
 
 
@@ -252,7 +262,7 @@ func procesarNN():
 	inputNN.append((w/5.0)-0.5)
 	inputNN.append((alpha/2.0)-0.5)
 
-	print("input",inputNN)
+	#print("input",inputNN)
 	output = NN1.feedForward(inputNN)
 	RCS = [output[0], output[1]]
 	Ftmax = output[2]

@@ -1,15 +1,18 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 
-[sub_resource type="CubeMesh" id=1]
+[sub_resource type="CylinderMesh" id=1]
+height = 100.0
+
+[sub_resource type="CubeMesh" id=2]
 size = Vector3( 1000, 50, 1000 )
 
-[sub_resource type="SpatialMaterial" id=2]
+[sub_resource type="SpatialMaterial" id=3]
 albedo_color = Color( 0.611765, 0.823529, 0.45098, 1 )
 
-[sub_resource type="CylinderMesh" id=3]
-height = 100.0
+[sub_resource type="BoxShape" id=4]
+extents = Vector3( 1000, 1, 1000 )
 
 [node name="Main" type="Node"]
 script = ExtResource( 1 )
@@ -18,10 +21,6 @@ script = ExtResource( 1 )
 transform = Transform( -1, -4.37114e-08, -7.57104e-08, 0, 0.866026, -0.5, 8.74228e-08, -0.5, -0.866026, 0, 0, -1000 )
 fov = 59.0
 far = 8192.0
-
-[node name="Suelo" type="MeshInstance" parent="."]
-mesh = SubResource( 1 )
-material/0 = SubResource( 2 )
 
 [node name="StarshipContainer" type="Node" parent="."]
 
@@ -32,5 +31,17 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 10, 0 )
 transform = Transform( 0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, 0, 0, 0 )
 
 [node name="MeshInstance" type="MeshInstance" parent="Spatial/Spatial"]
-mesh = SubResource( 3 )
+mesh = SubResource( 1 )
 material/0 = null
+
+[node name="Area" type="Area" parent="."]
+
+[node name="Suelo" type="MeshInstance" parent="Area"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -25, 0 )
+mesh = SubResource( 2 )
+material/0 = SubResource( 3 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Area"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
+shape = SubResource( 4 )
+[connection signal="body_entered" from="Area" to="." method="_contactoSuelo"]
